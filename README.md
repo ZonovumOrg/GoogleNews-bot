@@ -24,7 +24,7 @@ pip install pandas googlenews
 			
   * `-d`, `--debug`           Display debug on stardard output.
   
-  * `--links`               Add the links of the img and of address
+  * `--links`               Add the links of the image and of address
 
 ## Usage
 
