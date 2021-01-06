@@ -9,18 +9,21 @@ pip install pandas googlenews
 ###Settings
 
 -h, --help            show this help message and exit
-  -f DATA_FILENAME, --data-filename DATA_FILENAME
-                        Filename of the data collected.
-  -l LANG, --langage LANG
-                        Language for the news.
-  -p PERIOD, --period PERIOD
-                        Period of the news research.
-  -k KEYWORDS, --keywords KEYWORDS
-                        Research keywords.
+
+  -f DATA_FILENAME, --data-filename DATA_FILENAME Filename of the data collected.
+			
+  -l LANG, --langage LANG Language for the news.
+			
+  -p PERIOD, --period PERIODp period of the news research.
+			
+  -k KEYWORDS, --keywords KEYWORDS  Research keywords.
+			
   -v, --verbose         Display log information on stardard output.
-  -s SEPARATOR, --separator SEPARATOR
-                        Add separator for csv file
+  
+  -s SEPARATOR, --separator SEPARATOR Add separator for csv file
+			
   -d, --debug           Display debug on stardard output.
+  
   --links               Add the links of the img and of address
 
 ## Usage
