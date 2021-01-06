@@ -15,12 +15,6 @@ if 'ipdb' in installed_pkg:
     import ipdb  # noqa: F401
 
 
-# Default params
-LANG = "en"
-PERIOD = "1Y"
-KEY_WORD = "bitcoin"
-
-
 app_config = {}
 app_config["app_name_short"] = "googlenews-bot"
 app_config["app_name_long"] = app_config["app_name_short"]
@@ -38,14 +32,12 @@ APP_ARG_PARSER.add_argument(
     default="news.csv",
     help='Filename of the data collected.')
 
-
 APP_ARG_PARSER.add_argument(
     '-l', '--langage',
     dest='lang',
     action='store',
     default="en",
     help='Language for the news.')
-
 
 APP_ARG_PARSER.add_argument(
     '-p', '--period',
@@ -55,18 +47,40 @@ APP_ARG_PARSER.add_argument(
     help='Period of the news research.')
 
 APP_ARG_PARSER.add_argument(
+    '--desc',
+    dest='add_desc',
+    action='store_true',
+    default=False,
+    help='Add news description to data.')
+
+
+APP_ARG_PARSER.add_argument(
+    '--links',
+    dest='add_links',
+    action='store_true',
+    default=False,
+    help='Add the links of both news image and address.')
+
+APP_ARG_PARSER.add_argument(
+    '--media',
+    dest='add_media',
+    action='store_true',
+    default=False,
+    help='Add media in news data.')
+
+APP_ARG_PARSER.add_argument(
+    '--date-string',
+    dest='add_date_string',
+    action='store_true',
+    default=False,
+    help='Add date string new publishing info.')
+
+APP_ARG_PARSER.add_argument(
     '-k', '--keywords',
     dest='keywords',
     action='store',
     default="",
     help='Research keywords.')
-
-APP_ARG_PARSER.add_argument(
-    '-v', '--verbose',
-    dest='verbose_mode',
-    action='store_true',
-    default=False,
-    help='Display log information on stardard output.')
 
 APP_ARG_PARSER.add_argument(
     '-s', '--separator',
@@ -76,17 +90,27 @@ APP_ARG_PARSER.add_argument(
     help='Add separator for csv file')
 
 APP_ARG_PARSER.add_argument(
+    '--reset-data',
+    dest='reset_data',
+    action='store_true',
+    default=False,
+    help='Erase existing data if exists')
+
+
+APP_ARG_PARSER.add_argument(
+    '-v', '--verbose',
+    dest='verbose_mode',
+    action='store_true',
+    default=False,
+    help='Display log information on stardard output.')
+
+APP_ARG_PARSER.add_argument(
     '-d', '--debug',
     dest='debug_mode',
     action='store_true',
     default=False,
     help='Display debug on stardard output.')
-APP_ARG_PARSER.add_argument(
-    '--links',
-    dest='links',
-    action='store_true',
-    default=False,
-    help='Add the links of the img and of address')
+
 app_config.update(vars(APP_ARG_PARSER.parse_args()))
 
 # Logging configuration
@@ -99,7 +123,8 @@ if app_config["debug_mode"]:
 
 
 # Open news data stored if exists
-if os.path.exists(app_config["data_filename"]):
+if os.path.exists(app_config["data_filename"]) and \
+   not(app_config["reset_data"]):
     # Load already stored data
     data_df = pd.read_csv(app_config["data_filename"],
                           parse_dates=["datetime"],
@@ -110,37 +135,33 @@ else:
 
 # Init Google News handler
 googlenews = GoogleNews()
+
 # Configure research
-print('Data recovery...', end="")
+# Use debug logginh for this kind of information
+logging.debug('Data retreiving in progress')
 googlenews.set_lang(app_config["lang"])
 googlenews.set_period(app_config["period"])
 googlenews.get_news(app_config["keywords"])
-print('Done')
-if app_config['links']:
-    var_to_keep = ['title',
-                   'desc',
-                   'datetime',
-                   'site',
-                   'img',
-                   'link']
+logging.debug('Data retreiving done')
 
-    var_index = ['title',
-                 'desc',
-                 'datetime',
-                 'site',
-                 'img',
-                 'link']
-else:
-    
-    var_to_keep = ['title',
-                   'desc',
-                   'datetime',
-                   'site']
+var_index = ['datetime',
+             'site',
+             'title']
 
-    var_index = ['title',
-                 'desc',
-                 'datetime',
-                 'site']
+# Select optional data
+var_to_keep = []
+if app_config['add_links']:
+    var_to_keep.extend(["link", "img"])
+
+if app_config['add_media']:
+    var_to_keep.append("media")
+
+if app_config['add_date_string']:
+    var_to_keep.append("date")
+
+if app_config['add_desc']:
+    var_to_keep.append("desc")
+
 # Get new data and transform it into a dataframe
 data_new_df = pd.DataFrame(googlenews.results())
 
@@ -148,7 +169,7 @@ if len(data_new_df) == 0:
     logging.info("No new data collected")
     sys.exit(0)
 else:
-    data_new_df = data_new_df[var_to_keep]
+    data_new_df = data_new_df[var_index + var_to_keep]
 
 
 nb_data_ori = len(data_df)
@@ -162,18 +183,17 @@ data_df.drop_duplicates(subset=var_index,
 
 # Compute added data
 nb_data_added = len(data_df) - nb_data_ori
+
 if nb_data_added <= 0:
     logging.info(f"No new data collected. ")
     sys.exit(0)
 else:
     logging.info(f"Number of new data added: {nb_data_added}")
 
-
-# Save file to disk
-print(app_config['separator'])
-data_df.to_csv(app_config["data_filename"],
-               sep=app_config["separator"],
-               index=True)
+    # Save file to disk
+    data_df.to_csv(app_config["data_filename"],
+                   sep=app_config["separator"],
+                   index=False)
 
 
 sys.exit(0)
