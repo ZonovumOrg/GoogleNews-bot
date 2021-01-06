@@ -1,4 +1,5 @@
 # Important import
+
 import os
 import sys
 from GoogleNews import GoogleNews
