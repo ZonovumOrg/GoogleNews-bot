@@ -39,7 +39,7 @@ APP_ARG_PARSER.add_argument(
 
 
 APP_ARG_PARSER.add_argument(
-    '-l', '--lang',
+    '-l', '--langage',
     dest='lang',
     action='store',
     default="en",
@@ -68,12 +68,24 @@ APP_ARG_PARSER.add_argument(
     help='Display log information on stardard output.')
 
 APP_ARG_PARSER.add_argument(
+    '-s', '--separator',
+    dest='separator',
+    action='store',
+    default=";",
+    help='Add separator for csv file')
+
+APP_ARG_PARSER.add_argument(
     '-d', '--debug',
     dest='debug_mode',
     action='store_true',
     default=False,
     help='Display debug on stardard output.')
-
+APP_ARG_PARSER.add_argument(
+    '--links',
+    dest='links',
+    action='store_true',
+    default=False,
+    help='Add the links of the img and of address')
 app_config.update(vars(APP_ARG_PARSER.parse_args()))
 
 # Logging configuration
@@ -90,7 +102,7 @@ if os.path.exists(app_config["data_filename"]):
     # Load already stored data
     data_df = pd.read_csv(app_config["data_filename"],
                           parse_dates=["datetime"],
-                          sep=";")
+                          sep=app_config['separator'])
 else:
     # Create new dataframe
     data_df = pd.DataFrame()
@@ -98,19 +110,36 @@ else:
 # Init Google News handler
 googlenews = GoogleNews()
 # Configure research
+print('Data recovery...', end="")
 googlenews.set_lang(app_config["lang"])
 googlenews.set_period(app_config["period"])
 googlenews.get_news(app_config["keywords"])
+print('Done')
+if app_config['links']:
+    var_to_keep = ['title',
+                   'desc',
+                   'datetime',
+                   'site',
+                   'img',
+                   'link']
 
-var_to_keep = ['title',
-               'desc',
-               'datetime',
-               'site']
+    var_index = ['title',
+                 'desc',
+                 'datetime',
+                 'site',
+                 'img',
+                 'link']
+else:
+    
+    var_to_keep = ['title',
+                   'desc',
+                   'datetime',
+                   'site']
 
-var_index = ['title',
-             'datetime',
-             'site']
-
+    var_index = ['title',
+                 'desc',
+                 'datetime',
+                 'site']
 # Get new data and transform it into a dataframe
 data_new_df = pd.DataFrame(googlenews.results())
 
@@ -132,13 +161,17 @@ data_df.drop_duplicates(subset=var_index,
 
 # Compute added data
 nb_data_added = len(data_df) - nb_data_ori
-
-logging.info(f"Number of new data added: {nb_data_added}")
+if nb_data_added <= 0:
+    logging.info(f"No new data collected. ")
+    sys.exit(0)
+else:
+    logging.info(f"Number of new data added: {nb_data_added}")
 
 
 # Save file to disk
+print(app_config['separator'])
 data_df.to_csv(app_config["data_filename"],
-               sep=";",
+               sep=app_config["separator"],
                index=True)
 
 
