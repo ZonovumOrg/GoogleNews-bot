@@ -161,7 +161,7 @@ if app_config['add_date_string']:
 if app_config['add_desc']:
     var_to_keep.append("desc")
 
->>>>>>> 6f2fea295c99d22dc893f3403585e79c9ef319bf
+
 # Get new data and transform it into a dataframe
 data_new_df = pd.DataFrame(googlenews.results())
 
@@ -177,13 +177,18 @@ nb_data_ori = len(data_df)
 # Concatenate new data with stored data
 data_df = pd.concat([data_df, data_new_df],
                     axis=0)
+
+# data variables
 data_df.drop_duplicates(subset=var_index,
                         keep="first",
                         inplace=True)
 
-# Compute added data
-nb_data_added = len(data_df) - nb_data_ori
 
+nb_data_added = len(data_df) - nb_data_ori
+data_in_file = len(data_df) + nb_data_ori
+
+# Data information
+logging.info(f"Number of data in file: {data_in_file}")
 if nb_data_added <= 0:
     logging.info(f"No new data collected. ")
     sys.exit(0)
