@@ -25,5 +25,12 @@ To use Google News bot you can add the following parameters:
 			
   * `-d`, `--debug`           Display debug on stardard output.
   
-  * `--links`               Add the links of the image and of address
+  * `--desc`                Add news description to data.
+  
+  * `--links`               Add the links of both news image and address.
+  
+  * `--media`               Add media in news data.
+  
+  * `--date-string`         Add date string new publishing info.
+
   
