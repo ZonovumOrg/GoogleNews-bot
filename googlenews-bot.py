@@ -1,5 +1,4 @@
 # Important import
-
 import os
 import sys
 from GoogleNews import GoogleNews
@@ -111,11 +110,11 @@ else:
 # Init Google News handler
 googlenews = GoogleNews()
 # Configure research
-print('Data recovery...', end="")
+print('Data recovery...')
 googlenews.set_lang(app_config["lang"])
 googlenews.set_period(app_config["period"])
 googlenews.get_news(app_config["keywords"])
-print('Done')
+print(' Done')
 if app_config['links']:
     var_to_keep = ['title',
                    'desc',
