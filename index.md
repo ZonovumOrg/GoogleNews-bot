@@ -21,6 +21,7 @@ To use Google News bot you can add the following parameters:
   * `--links`               Add the links of both news image and address.
   * `--media`               Add media in news data.
   * `--date-string`         Add date string new publishing info.
+  * `--notify`              Add information notification
 
 Example:
 
