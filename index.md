@@ -8,6 +8,7 @@ You need to perform the following commands to run GoogleNews bot:
 pip3 install -r requirement.txt
 ```
 ### Use
+Use: `python3 googlenews-bot.py # Params`
 To use Google News bot you can add the following parameters:
   * `-h`, `--help`            show this help message and exit
   * `-f` DATA_FILENAME, `--data-filename` DATA_FILENAME Filename of the data collected.
