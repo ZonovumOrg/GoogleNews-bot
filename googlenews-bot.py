@@ -5,9 +5,24 @@ from GoogleNews import GoogleNews
 import time
 import pandas as pd
 import argparse
-
-import logging
+import notify2
+import pylog
 import pkg_resources
+
+logs = pylog.adv_color_log('Googlenews-bot')
+notify2.init('Googlenews-bot')
+n = notify2.Notification("Googlenews-bot",
+                         "News has been added",
+                         "info"   # Icon name
+                        )
+no_data = notify2.Notification("Googlenews-bot",
+                         "No news data added",
+                         "info"   # Icon name
+                        )
+no_internet_connected = notify2.Notification("Googlenews-bot",
+                         "Unable to retrieve data from news.google.com",
+                         "error"   # Icon name
+                        )
 
 installed_pkg = {pkg.key for pkg in pkg_resources.working_set}
 if 'ipdb' in installed_pkg:
@@ -109,17 +124,13 @@ APP_ARG_PARSER.add_argument(
     action='store_true',
     default=False,
     help='Display debug on stardard output.')
-
+APP_ARG_PARSER.add_argument(
+    '--notify',
+    dest='notify_mode',
+    action='store_true',
+    default=False,
+    help='Display debug on stardard output.')
 app_config.update(vars(APP_ARG_PARSER.parse_args()))
-
-# Logging configuration
-if app_config["verbose_mode"]:
-    logging.basicConfig(stream=sys.stdout,
-                        level=logging.INFO)
-if app_config["debug_mode"]:
-    logging.basicConfig(stream=sys.stdout,
-                        level=logging.DEBUG)
-
 
 # Open news data stored if exists
 if os.path.exists(app_config["data_filename"]) and \
@@ -137,11 +148,19 @@ googlenews = GoogleNews()
 
 # Configure research
 # Use debug logginh for this kind of information
-logging.debug('Data retreiving in progress')
+if app_config['verbose_mode']:
+    logs.info('Data retreiving in progress')
 googlenews.set_lang(app_config["lang"])
 googlenews.set_period(app_config["period"])
 googlenews.get_news(app_config["keywords"])
-logging.debug('Data retreiving done')
+if len(googlenews.results()) <= 0:
+    logs.error('Unable to retrieve data from news.google.com')
+    if app_config["notify_mode"]:
+        no_internet_connected.show()
+    sys.exit(0)
+    sys.exit(0)
+if app_config['verbose_mode']:
+    logs.valid('Data retreiving done')
 
 var_index = ['datetime',
              'site',
@@ -164,9 +183,11 @@ if app_config['add_desc']:
 
 # Get new data and transform it into a dataframe
 data_new_df = pd.DataFrame(googlenews.results())
-
+if len(googlenews.results()) <= 0:
+    logs.error('Unable to retrieve data from news.google.com')
+    sys.exit(0)
 if len(data_new_df) == 0:
-    logging.info("No new data collected")
+    logs.warning("No new data collected")
     sys.exit(0)
 else:
     data_new_df = data_new_df[var_index + var_to_keep]
@@ -188,13 +209,16 @@ nb_data_added = len(data_df) - nb_data_ori
 data_in_file = len(data_df) + nb_data_ori
 
 # Data information
-logging.info(f"Number of data in file: {data_in_file}")
+logs.info(f"Number of data in file: {data_in_file}")
 if nb_data_added <= 0:
-    logging.info(f"No new data collected. ")
+    logs.warning(f"No new data collected. ")
+    if app_config["notify_mode"]:
+        no_data.show()
     sys.exit(0)
 else:
-    logging.info(f"Number of new data added: {nb_data_added}")
-
+    logs.info(f"Number of new data added: {nb_data_added}")
+    if app_config["notify_mode"]:
+        n.show()
     # Save file to disk
     data_df.to_csv(app_config["data_filename"],
                    sep=app_config["separator"],
