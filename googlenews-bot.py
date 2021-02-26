@@ -28,110 +28,117 @@ installed_pkg = {pkg.key for pkg in pkg_resources.working_set}
 if 'ipdb' in installed_pkg:
     import ipdb  # noqa: F401
 
+def arg_parser_arguments():
+    app_config = {}
+    app_config["app_name_short"] = "googlenews-bot"
+    app_config["app_name_long"] = app_config["app_name_short"]
+    app_config["version"] = "0.0.1"
+    
+    # CLI parameters management
+    # -------------------------
+    APP_ARG_PARSER = argparse.ArgumentParser(
+        description=app_config["app_name_short"] + " " + app_config["version"])
+    
+    APP_ARG_PARSER.add_argument(
+        '-f', '--data-filename',
+        dest='data_filename',
+        action='store',
+        default="news.csv",
+        help='Filename of the data collected.')
+    
+    APP_ARG_PARSER.add_argument(
+        '-l', '--langage',
+        dest='lang',
+        action='store',
+        default="en",
+        help='Language for the news.')
 
-app_config = {}
-app_config["app_name_short"] = "googlenews-bot"
-app_config["app_name_long"] = app_config["app_name_short"]
-app_config["version"] = "0.0.1"
+    APP_ARG_PARSER.add_argument(
+        '-p', '--period',
+        dest='period',
+        action='store',
+        default="7d",
+        help='Period of the news research.')
 
-# CLI parameters management
-# -------------------------
-APP_ARG_PARSER = argparse.ArgumentParser(
-    description=app_config["app_name_short"] + " " + app_config["version"])
-
-APP_ARG_PARSER.add_argument(
-    '-f', '--data-filename',
-    dest='data_filename',
-    action='store',
-    default="news.csv",
-    help='Filename of the data collected.')
-
-APP_ARG_PARSER.add_argument(
-    '-l', '--langage',
-    dest='lang',
-    action='store',
-    default="en",
-    help='Language for the news.')
-
-APP_ARG_PARSER.add_argument(
-    '-p', '--period',
-    dest='period',
-    action='store',
-    default="7d",
-    help='Period of the news research.')
-
-APP_ARG_PARSER.add_argument(
-    '--desc',
-    dest='add_desc',
-    action='store_true',
-    default=False,
-    help='Add news description to data.')
-
-
-APP_ARG_PARSER.add_argument(
-    '--links',
-    dest='add_links',
-    action='store_true',
-    default=False,
-    help='Add the links of both news image and address.')
-
-APP_ARG_PARSER.add_argument(
-    '--media',
-    dest='add_media',
-    action='store_true',
-    default=False,
-    help='Add media in news data.')
-
-APP_ARG_PARSER.add_argument(
-    '--date-string',
-    dest='add_date_string',
-    action='store_true',
-    default=False,
-    help='Add date string new publishing info.')
-
-APP_ARG_PARSER.add_argument(
-    '-k', '--keywords',
-    dest='keywords',
-    action='store',
-    default="",
-    help='Research keywords.')
-
-APP_ARG_PARSER.add_argument(
-    '-s', '--separator',
-    dest='separator',
-    action='store',
-    default=";",
-    help='Add separator for csv file')
-
-APP_ARG_PARSER.add_argument(
-    '--reset-data',
-    dest='reset_data',
-    action='store_true',
-    default=False,
-    help='Erase existing data if exists')
+    APP_ARG_PARSER.add_argument(
+        '--desc',
+        dest='add_desc',
+        action='store_true',
+        default=False,
+        help='Add news description to data.')
 
 
-APP_ARG_PARSER.add_argument(
-    '-v', '--verbose',
-    dest='verbose_mode',
-    action='store_true',
-    default=False,
-    help='Display log information on stardard output.')
+    APP_ARG_PARSER.add_argument(
+        '--links',
+        dest='add_links',
+        action='store_true',
+        default=False,
+        help='Add the links of both news image and address.')
 
-APP_ARG_PARSER.add_argument(
-    '-d', '--debug',
-    dest='debug_mode',
-    action='store_true',
-    default=False,
-    help='Display debug on stardard output.')
-APP_ARG_PARSER.add_argument(
-    '--notify',
-    dest='notify_mode',
-    action='store_true',
-    default=False,
-    help='Display debug on stardard output.')
-app_config.update(vars(APP_ARG_PARSER.parse_args()))
+    APP_ARG_PARSER.add_argument(
+        '--media',
+        dest='add_media',
+        action='store_true',
+        default=False,
+        help='Add media in news data.')
 
+    APP_ARG_PARSER.add_argument(
+        '--date-string',
+        dest='add_date_string',
+        action='store_true',
+        default=False,
+        help='Add date string new publishing info.')
+
+    APP_ARG_PARSER.add_argument(
+        '-k', '--keywords',
+        dest='keywords',
+        action='store',
+        default="",
+        help='Research keywords.')
+    
+    APP_ARG_PARSER.add_argument(
+        '-s', '--separator',
+        dest='separator',
+        action='store',
+        default=";",
+        help='Add separator for csv file')
+
+    APP_ARG_PARSER.add_argument(
+        '--reset-data',
+        dest='reset_data',
+        action='store_true',
+        default=False,
+        help='Erase existing data if exists')
+
+
+    APP_ARG_PARSER.add_argument(
+        '-v', '--verbose',
+        dest='verbose_mode',
+        action='store_true',
+        default=False,
+        help='Display log information on stardard output.')
+
+    APP_ARG_PARSER.add_argument(
+        '-d', '--debug',
+        dest='debug_mode',
+        action='store_true',
+        default=False,
+        help='Display debug on stardard output.')
+    APP_ARG_PARSER.add_argument(
+        '--notify',
+        dest='notify_mode',
+        action='store_true',
+        default=False,
+        help='Display debug on stardard output.')
+    app_config.update(vars(APP_ARG_PARSER.parse_args()))
+    return app_config
+def googlenews_recovery(app_config):
+    googlenews = GoogleNews()
+    googlenews.set_lang(app_config["lang"])
+    googlenews.set_period(app_config["period"])
+    googlenews.get_news(app_config["keywords"])
+    return googlenews
+app_config = arg_parser_arguments()
 # Open news data stored if exists
 if os.path.exists(app_config["data_filename"]) and \
    not(app_config["reset_data"]):
@@ -143,16 +150,12 @@ else:
     # Create new dataframe
     data_df = pd.DataFrame()
 
-# Init Google News handler
-googlenews = GoogleNews()
-
 # Configure research
-# Use debug logginh for this kind of information
+
 if app_config['verbose_mode']:
     logs.info('Data retreiving in progress')
-googlenews.set_lang(app_config["lang"])
-googlenews.set_period(app_config["period"])
-googlenews.get_news(app_config["keywords"])
+
+googlenews = googlenews_recovery(app_config)
 if len(googlenews.results()) <= 0:
     logs.error('Unable to retrieve data from news.google.com')
     if app_config["notify_mode"]:
